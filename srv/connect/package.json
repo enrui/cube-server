@@ -1,0 +1,14 @@
+{
+  "name": "cube-connect",
+  "version": "1.0.0",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "EJ CHANG",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "websocket": "^1.0.26"
+  }
+}
