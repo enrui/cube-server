@@ -36,7 +36,7 @@ wsServer.on('request', function(request) {
 
 	var connection = request.accept(null, request.origin);
 	var url_query =urlp.parse(request.resource,true);
-	 ID and circle_ID
+	//ID and circle_ID
 	var connection_id = url_query.query.id
 	var circle_id = null
 	if(url_query.query.circle)
@@ -72,8 +72,8 @@ function broadcast(data) {
 	});
 }
 
- Send a message to a connection by its connectionID
- function sendToConnectionId(connectionID, data) {
+//Send a message to a connection by its connectionID
+function sendToConnectionId(connectionID, data) {
 	var connection = connections[connectionID];
 	if (connection && connection.connected) {
 		console.log((new Date()) + "Send data to connection ID:"+connectionID);
