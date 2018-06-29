@@ -1,8 +1,42 @@
 #!/usr/bin/env node
+var cube_set = require('/jroot/etc/ENV.json');
 var WebSocketServer = require('websocket').server;
 var http = require('http');
 var urlp = require('url');
 
+//Handle Redis server connection
+var redis = require("redis");
+var rs_client_sub = null
+var rs_client_pub = null
+if(cube_set.CACHE_SERVICE_URL && cube_set.CACHE_SERVICE_PORT){
+	rs_client_sub = redis.createClient(cube_set.CACHE_SERVICE_PORT,cube_set.CACHE_SERVICE_URL);
+	rs_client_pub = redis.createClient(cube_set.CACHE_SERVICE_PORT,cube_set.CACHE_SERVICE_URL);
+}
+else
+	console.log("redis connection setting lost")
+
+if(!rs_client_sub || !rs_client_pub){
+	process.exit(1);
+}
+
+rs_client_sub.on("subscribe", function (channel, count) {
+	console.log("subscribed channel:"+channel+"")
+	rs_client_pub.publish("interface", "I am sending a message.");
+});
+
+rs_client_sub.on("message", function (channel, message) {
+	console.log("sub channel :" + channel + ", got a message:" + message);
+});
+
+rs_client_sub.subscribe("interface");
+
+/* the other way to connect redis service
+var redis = require('./redis-client.js');
+var redis_connection = new redis();
+
+//subscribe channel interface for communicate with interface server
+redis_connection.subscribe("interface")
+*/
 
 var server = http.createServer(function(request, response) {
 	console.log((new Date()) + ' Received request for ' + request.url);

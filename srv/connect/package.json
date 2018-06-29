@@ -9,6 +9,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "redis": "^2.8.0",
     "websocket": "^1.0.26"
   }
 }
