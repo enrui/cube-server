@@ -1,3 +1,4 @@
 srv/api/node_modules
 srv/connect/node_modules
+srv/agent/node_modules
 
