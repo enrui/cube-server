@@ -10,6 +10,7 @@ var rs_client_pub = null
 if(cube_set.CACHE_SERVICE_URL && cube_set.CACHE_SERVICE_PORT){
 	rs_client_sub = redis.createClient(cube_set.CACHE_SERVICE_PORT,cube_set.CACHE_SERVICE_URL);
 	rs_client_pub = redis.createClient(cube_set.CACHE_SERVICE_PORT,cube_set.CACHE_SERVICE_URL);
+	rs_client_data = redis.createClient(cube_set.CACHE_SERVICE_PORT,cube_set.CACHE_SERVICE_URL);
 }
 else
 	console.log("redis connection setting lost")
@@ -88,7 +89,7 @@ device_if.post('/login', async ( ctx )=>{
   let postData = await parsePostData( ctx )
   let res_data = {}
   res_data.result = "Success"
-  await device_apis.login(db_con,postData.id,postData.auth_key,res_data)
+  await device_apis.login(db_con,rs_client_data,postData.id,postData.auth_key,res_data)
   ctx.body = res_data
 })
 
