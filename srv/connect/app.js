@@ -20,12 +20,22 @@ if(!rs_client_sub || !rs_client_pub){
 }
 
 rs_client_sub.on("subscribe", function (channel, count) {
-	console.log("subscribed channel:"+channel+"")
+	console.log("[connect-server]subscribed channel:"+channel+"")
 	rs_client_pub.publish("interface", "I am sending a message.");
 });
 
 rs_client_sub.on("message", function (channel, message) {
-	console.log("sub channel :" + channel + ", got a message:" + message);
+	console.log("[connect-server]sub channel :" + channel + ", got a message:" + message);
+	var message_obj = {}
+
+	try {
+        	message_obj = JSON.parse(message);
+    	} catch (e) {
+        	message_obj.target_id = null
+    	}
+	if(message_obj.target_id && message_obj.push_message)
+		sendToConnectionId(JSON.parse(message).target_id,JSON.parse(message).push_message)
+	
 });
 
 rs_client_sub.subscribe("interface");
@@ -44,8 +54,8 @@ var server = http.createServer(function(request, response) {
 	response.end();
 });
 
-server.listen(8080, function() {
-	console.log((new Date()) + ' Server is listening on port 8080');
+server.listen(cube_set.NOTIFY_SERVER_PORT, function() {
+	console.log((new Date()) + ' Server is listening on port',cube_set.NOTIFY_SERVER_PORT);
 });
 
 
@@ -71,6 +81,7 @@ wsServer.on('request', function(request) {
 	var connection = request.accept(null, request.origin);
 	var url_query =urlp.parse(request.resource,true);
 	//ID and circle_ID
+	
 	var connection_id = url_query.query.id
 	var circle_id = null
 	if(url_query.query.circle)

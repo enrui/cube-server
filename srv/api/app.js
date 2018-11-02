@@ -20,7 +20,7 @@ if(!rs_client_sub || !rs_client_pub){
 }
 
 rs_client_sub.on("message", function (channel, message) {
-	console.log("sub channel :" + channel + ", got a message:" + message);
+	console.log("[api-server]sub channel :" + channel + ", got a message:" + message);
 });
 
 rs_client_sub.subscribe("interface");
@@ -78,9 +78,14 @@ page.get('/status', async ( ctx )=>{
 		ctx.body = 'Connected'
 	else
 		ctx.body = 'Disonnect'
-}).get('/push', async ( ctx )=>{
-	ctx.body = 'send page!'
-	rs_client_pub.publish("interface", "EJ test");
+}).post('/push', async ( ctx )=>{
+	let postData_p = await parsePostData( ctx )
+	if(postData_p.target_id && postData_p.push_message){
+		ctx.body = 'send message!'
+		rs_client_pub.publish("interface", JSON.stringify(postData_p));
+	}else{
+		ctx.body = 'content error!'
+	}
 })
 
 // Handle device type API
@@ -100,8 +105,8 @@ router.use('/device', device_if.routes(), page.allowedMethods())
 
 app.use(router.routes()).use(router.allowedMethods())
 
-app.listen(3000, () => {
-  console.log('Cube Interface service starting at port 3000')
+app.listen(cube_set.INTERFACE_SERVER_PORT, () => {
+  console.log('Cube Interface service starting at port',cube_set.INTERFACE_SERVER_PORT)
 })
 
 
