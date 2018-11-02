@@ -10,10 +10,13 @@ var cube_set = require('/jroot/etc/ENV.json');
 var id_set = require('/jroot/etc/ID.json');
 
 var ws=null
+var retry_connector = null
 
 async function cube_login() {
 	let cube_token = await auth.login(id_set.ID,id_set.KEY);
 	
+	clearTimeout(retry_connector)
+
 	if(cube_token == "fail")
 		process.exit(1);
 	
@@ -31,6 +34,14 @@ async function cube_login() {
 		console.log("open connection");
 		//ws.send(1);         
 	});
+	
+	ws.onerror = function(err) {
+		console.log('Socket is error. Reconnect will be attempted in 1 second.');
+                retry_connector = setTimeout(function() {
+                        ws=null
+			cube_login();
+                }, 5000);
+	}
 
 	ws.on('message', function incoming(data) {
 		console.log(" client get message:"+data);
