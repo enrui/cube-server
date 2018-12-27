@@ -8,12 +8,17 @@ var urlp = require('url');
 var redis = require("redis");
 var rs_client_sub = null
 var rs_client_pub = null
+var rs_middle_sub = []
+var rs_middle_pub = []
 if(cube_set.CACHE_SERVICE_URL && cube_set.CACHE_SERVICE_PORT){
 	rs_client_sub = redis.createClient(cube_set.CACHE_SERVICE_PORT,cube_set.CACHE_SERVICE_URL);
 	rs_client_pub = redis.createClient(cube_set.CACHE_SERVICE_PORT,cube_set.CACHE_SERVICE_URL);
 }
-else
+else{
 	console.log("redis connection setting lost")
+	process.exit(1);
+}
+	
 
 if(!rs_client_sub || !rs_client_pub){
 	process.exit(1);
@@ -69,6 +74,7 @@ function originIsAllowed(origin) {
 }
 
 var connections = {};
+var connections_event_subscriber = {};
 var connections_circle = [];
 
 wsServer.on('request', function(request) {
@@ -82,19 +88,52 @@ wsServer.on('request', function(request) {
 	var url_query =urlp.parse(request.resource,true);
 	//ID and circle_ID
 	
-	var connection_id = url_query.query.id
-	var circle_id = null
-	if(url_query.query.circle)
-		var circle_id = url_query.query.circle
 	
-	connections[url_query.query.id] = connection;
-	console.log((new Date()) + ' Connection accepted.');
+	if(url_query.query.type == "agent"){
+		if(!url_query.query.id)
+			return;
+		
+		var connection_id = url_query.query.id
+		connection.cube_device_id = connection_id
+		var circle_id = null
+		if(url_query.query.circle)
+			var circle_id = url_query.query.circle
+	
+		connections[url_query.query.id] = connection;
+		if(!connections_event_subscriber[url_query.query.id])
+			connections_event_subscriber[url_query.query.id]={};
+		
+		console.log((new Date()) + ' Agent Connection accepted.');
+		if(!rs_middle_pub[connection_id] && !rs_middle_sub[connection_id]){
+			rs_middle_pub[connection_id] = redis.createClient(cube_set.CACHE_SERVICE_PORT,cube_set.CACHE_SERVICE_URL);
+			rs_middle_sub[connection_id] = redis.createClient(cube_set.CACHE_SERVICE_PORT,cube_set.CACHE_SERVICE_URL);
+			
+			rs_middle_sub[connection_id].subscribe(connection_id+"_event_message");
+			
+			rs_middle_sub[connection_id].on("message", function (channel, message) {
+				console.log("[Middle message]sub channel :" + channel + ", got a message:" + message);
+				event_broadcast(connection_id, message)
+				
+			});
+		}		
+	}else if(url_query.query.type == "event_sub"){
+		console.log((new Date()) + ' Connection accepted.');
 
-
+		if(!connections_event_subscriber[url_query.query.target_id])
+			connections_event_subscriber[url_query.query.target_id]={}
+		
+		connections_event_subscriber[url_query.query.target_id][url_query.query.sub_id] = connection;
+	}
+	
+	
 	connection.on('message', function(message) {
 		if (message.type === 'utf8') {
 			console.log((new Date()) + "ws server received Message:"+message.utf8Data);
-			sendToConnectionId(message.utf8Data,"got");
+			/*
+			handle something
+			*/
+			
+			rs_middle_pub[connection_id].publish(this.cube_device_id+"_event_message", message.utf8Data);			
 		}
 		else if (message.type === 'binary') {
 			console.log((new Date()) + 'Received Binary Message of ' + message.binaryData.length + ' bytes');
@@ -107,6 +146,18 @@ wsServer.on('request', function(request) {
 	});
 });
 
+
+function event_broadcast(device_id, data) {
+	if(!connections_event_subscriber[device_id])
+		return;
+	
+	Object.keys(connections_event_subscriber[device_id]).forEach(function(key) {
+		var connection = connections_event_subscriber[device_id][key];
+		if (connection.connected) {
+			connection.send(data);
+		}
+	});
+}
 
 function broadcast(data) {
 	Object.keys(connections).forEach(function(key) {
