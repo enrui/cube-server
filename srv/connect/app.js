@@ -6,8 +6,12 @@ var urlp = require('url');
 
 //Handle Redis server connection
 var redis = require("redis");
+
+//client subscriber/publisher is use to forward mwssage from interface server to device agent
 var rs_client_sub = null
 var rs_client_pub = null
+
+//middle subcriber/publisher is use to forward device event message to subscriber who from web-app or thers
 var rs_middle_sub = []
 var rs_middle_pub = []
 if(cube_set.CACHE_SERVICE_URL && cube_set.CACHE_SERVICE_PORT){
