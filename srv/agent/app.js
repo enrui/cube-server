@@ -1,12 +1,11 @@
-//var onoff_gpio = require('onoff').Gpio;
-//var led_controller = require( './output/led.js' );
+
 const WebSocket = require('ws');
 const fs = require("fs");
 
 var led_pin=2, led_sw=0;
-//var led = new onoff_gpio(led_pin, 'out');
 var auth = require( './lib/auth.js' );
 var ssdp_handler = require( './lib/ssdp.js' );
+var action = require( './lib/action.js' );
 var cube_set = require('/jroot/etc/ENV.json');
 var id_set = require('/jroot/etc/ID.json');
 var service_list = require('/jroot/etc/SERVICE.json');
@@ -80,7 +79,6 @@ server.listen(cube_set.AGENT_SERVICE_PORT);
 console.log('Node.js web server at port '+cube_set.AGENT_SERVICE_PORT+' is running..')
 
 ssdp_handler.listen();
-
 
 
 
