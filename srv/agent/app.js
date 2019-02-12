@@ -38,10 +38,10 @@ async function cube_login() {
 	
 	ws.onerror = function(err) {
 		console.log('Socket is error. Reconnect will be attempted in 1 second.');
-                retry_connector = setTimeout(function() {
-                        ws=null
+		retry_connector = setTimeout(function() {
+			ws=null
 			cube_login();
-                }, 5000);
+		}, 5000);
 	}
 
 	ws.on('message', function incoming(data) {

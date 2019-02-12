@@ -19,7 +19,7 @@ module.exports = function(){
 			try {
 				con.query(sql_query, function (err, result) {
 					if (err) return -1;
-					resolve( result[0] )
+					resolve( result )
 				});
 			} catch ( err ) {
 			  reject(err)

@@ -114,8 +114,10 @@ wsServer.on('request', function(request) {
 			
 			rs_middle_sub[connection_id].subscribe(connection_id+"_event_message");
 			
+			
 			rs_middle_sub[connection_id].on("message", function (channel, message) {
 				console.log("[Middle message]sub channel :" + channel + ", got a message:" + message);
+				//Send message from agent to other event subscriber
 				event_broadcast(connection_id, message)
 				
 			});
